@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+.expo-shared/
+dist/
+build/
+*.log
+npm-debug.log*
+.DS_Store
+
+# env / lokale Overrides
+.env
+*.local.*
