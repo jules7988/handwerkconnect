@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet } from 'react-native';
 
-export default function ItsAMatchModal({ visible, onClose, names }: { visible: boolean; onClose: () => void; names: { azubi: string; firma: string } }) {
+export default function ItsAMatchModal({ visible, onClose, names }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
