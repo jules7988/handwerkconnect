@@ -14,17 +14,18 @@ export default function SignUp() {
     if (!role) return Alert.alert('Fehler', 'Rolle fehlt. Bitte zurück.');
     if (!email || !password) return Alert.alert('Fehler', 'Email und Passwort sind Pflicht.');
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    // 1) Signup with metadata.role -> DB trigger creates profiles row
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { role } },
+    });
 
-    if (error) return Alert.alert('Signup fehlgeschlagen', error.message);
+    if (signUpError) return Alert.alert('Signup fehlgeschlagen', signUpError.message);
 
-    const userId = data.user?.id;
-    if (!userId) return Alert.alert('Fehler', 'Kein UserId erhalten.');
-
-    // Create profiles row (role)
-    const { error: pErr } = await supabase.from('profiles').insert({ user_id: userId, role });
-
-    if (pErr) return Alert.alert('Fehler', `profiles insert: ${pErr.message}`);
+    // 2) For MVP: sign in immediately (works when email confirmations are OFF)
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    if (signInError) return Alert.alert('Login nach Signup fehlgeschlagen', signInError.message);
 
     router.replace({ pathname: '/legal/consent', params: { role } });
   };
