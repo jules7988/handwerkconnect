@@ -1,18 +1,14 @@
 import { Stack } from 'expo-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { AuthProvider } from '@/lib/auth';
-
-const queryClient = new QueryClient();
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-        </AuthProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+    <Stack screenOptions={{ headerTitle: 'HandwerkConnect' }}>
+      <Stack.Screen name="auth/welcome" options={{ title: 'Start' }} />
+      <Stack.Screen name="auth/sign-in" options={{ title: 'Login' }} />
+      <Stack.Screen name="auth/sign-up" options={{ title: 'Registrierung' }} />
+      <Stack.Screen name="legal/consent" options={{ title: 'Einwilligung' }} />
+      <Stack.Screen name="azubi/profile" options={{ title: 'Azubi Profil' }} />
+      <Stack.Screen name="company/profile" options={{ title: 'Betrieb Profil' }} />
+    </Stack>
   );
 }
