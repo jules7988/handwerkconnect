@@ -1,4 +1,3 @@
-cat > app/azubi/profile.tsx << 'EOF'
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, Alert, ScrollView } from 'react-native';
 import { supabase } from '../../src/lib/supabase';
@@ -49,7 +48,6 @@ export default function AzubiProfile() {
       return Alert.alert('Nicht eingeloggt', 'Bitte erneut einloggen.');
     }
 
-    // Load trades
     const { data: tData, error: tErr } = await supabase
       .from('trades')
       .select('id,name')
@@ -62,7 +60,6 @@ export default function AzubiProfile() {
     }
     setTrades(tData ?? []);
 
-    // Load existing azubi profile (if any)
     const { data: aData, error: aErr } = await supabase
       .from('azubi_profiles')
       .select('*')
@@ -144,9 +141,6 @@ export default function AzubiProfile() {
   return (
     <ScrollView contentContainerStyle={{ padding: 24, gap: 12 }}>
       <Text style={{ fontSize: 20, fontWeight: '700' }}>Azubi Profil</Text>
-      <Text style={{ opacity: 0.7 }}>
-        Pflicht: Vorname, Nachname, Adresse, PLZ, Stadt, Beruf, E-Mail oder WhatsApp-Link.
-      </Text>
 
       <TextInput placeholder="Vorname" value={firstName} onChangeText={setFirstName} style={{ borderWidth: 1, borderRadius: 10, padding: 12 }} />
       <TextInput placeholder="Nachname" value={lastName} onChangeText={setLastName} style={{ borderWidth: 1, borderRadius: 10, padding: 12 }} />
@@ -163,12 +157,7 @@ export default function AzubiProfile() {
           <Pressable
             key={t.id}
             onPress={() => setSelectedTradeId(t.id)}
-            style={{
-              padding: 12,
-              borderWidth: 1,
-              borderRadius: 10,
-              opacity: selectedTradeId === t.id ? 1 : 0.7,
-            }}
+            style={{ padding: 12, borderWidth: 1, borderRadius: 10, opacity: selectedTradeId === t.id ? 1 : 0.7 }}
           >
             <Text style={{ fontWeight: selectedTradeId === t.id ? '700' : '400' }}>{t.name}</Text>
           </Pressable>
@@ -194,18 +183,10 @@ export default function AzubiProfile() {
       <Pressable
         disabled={!isValid || saving}
         onPress={onSave}
-        style={{
-          marginTop: 10,
-          padding: 14,
-          borderWidth: 1,
-          borderRadius: 10,
-          alignItems: 'center',
-          opacity: !isValid || saving ? 0.4 : 1,
-        }}
+        style={{ marginTop: 10, padding: 14, borderWidth: 1, borderRadius: 10, alignItems: 'center', opacity: !isValid || saving ? 0.4 : 1 }}
       >
         <Text style={{ fontWeight: '700' }}>{saving ? 'Speichert...' : 'Speichern'}</Text>
       </Pressable>
     </ScrollView>
   );
 }
-EOF
