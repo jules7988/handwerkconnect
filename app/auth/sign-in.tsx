@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, Alert } from 'react-native';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export default function SignIn() {
   const router = useRouter();
@@ -9,11 +9,19 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
 
   const onSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return Alert.alert('Login fehlgeschlagen', error.message);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return Alert.alert('Login fehlgeschlagen', error.message);
+    }
 
     const userId = data.user?.id;
-    if (!userId) return Alert.alert('Fehler', 'Kein UserId erhalten.');
+    if (!userId) {
+      return Alert.alert('Fehler', 'Keine User-ID erhalten.');
+    }
 
     const { data: prof, error: pErr } = await supabase
       .from('profiles')
@@ -21,7 +29,13 @@ export default function SignIn() {
       .eq('user_id', userId)
       .single();
 
-    if (pErr) return Alert.alert('Fehler', `profiles read: ${pErr.message}`);
+    if (pErr) {
+      return Alert.alert('Fehler', `profiles read: ${pErr.message}`);
+    }
+
+    if (!prof?.role) {
+      return Alert.alert('Fehler', 'Keine Rolle im Profil gefunden.');
+    }
 
     router.replace(prof.role === 'azubi' ? '/azubi/profile' : '/company/profile');
   };
@@ -47,7 +61,10 @@ export default function SignIn() {
         style={{ borderWidth: 1, borderRadius: 10, padding: 12 }}
       />
 
-      <Pressable onPress={onSignIn} style={{ padding: 14, borderWidth: 1, borderRadius: 10, alignItems: 'center' }}>
+      <Pressable
+        onPress={onSignIn}
+        style={{ padding: 14, borderWidth: 1, borderRadius: 10, alignItems: 'center' }}
+      >
         <Text style={{ fontWeight: '700' }}>Einloggen</Text>
       </Pressable>
     </View>

@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, Alert } from 'react-native';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from "@/lib/supabase";
 
 export default function SignUp() {
   const router = useRouter();

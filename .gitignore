@@ -19,3 +19,8 @@ expo-env.d.ts
 
 # Expo prebuild artifacts
 /ios/
+
+
+eas env:create --environment production --name EXPO_PUBLIC_SUPABASE_URL --value "https://DEINPROJEKT.supabase.co"
+
+eas env:create --environment production --name EXPO_PUBLIC_SUPABASE_URL --value "https://jshkxeidnqrmonyvoucp.supabase.co"

@@ -8,6 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
+
   splash: {
     image: "./assets/splash.png",
     resizeMode: "contain",
@@ -18,7 +19,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: false,
     bundleIdentifier: "com.jules88.handwerkconnect",
 
-    // ✅ REQUIRED for EAS iOS builds (fixes your current error)
+    // Hinweis: EAS "remote" versioning ignoriert das Feld fürs Bauen,
+    // aber es bleibt im Manifest sichtbar (expo-constants).
+    buildNumber: "10",
+
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false
     }
@@ -33,7 +37,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
 
   web: { bundler: "metro" },
+
   plugins: ["expo-router"],
+
   experiments: { typedRoutes: true },
 
   extra: {
@@ -41,9 +47,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       projectId: "23e8627d-112f-4fee-91cc-7838857bafaa"
     },
 
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-    EDGE_BASE_URL: process.env.EDGE_BASE_URL || "http://localhost:54321/functions/v1",
-    MOCK_MODE: process.env.MOCK_MODE ?? "true"
+    // ✅ EXPO_PUBLIC_* wird in EAS Production korrekt injected
+    SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+    SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    EDGE_BASE_URL:
+      process.env.EXPO_PUBLIC_EDGE_BASE_URL ||
+      "http://localhost:54321/functions/v1",
+
+    // ✅ MOCK_MODE nur im Development default "true", in Production/TestFlight immer "false"
+    MOCK_MODE:
+      process.env.NODE_ENV === "development"
+        ? (process.env.EXPO_PUBLIC_MOCK_MODE ?? "true")
+        : "false"
   }
 });

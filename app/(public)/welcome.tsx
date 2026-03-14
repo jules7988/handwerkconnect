@@ -5,14 +5,29 @@ import { useRouter } from 'expo-router';
 
 export default function Welcome() {
   const router = useRouter();
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Willkommen bei HandwerkConnect</Text>
-      <Text style={styles.subtitle}>Swipe & Match für Azubis und Handwerksbetriebe.</Text>
+      <Text style={styles.subtitle}>Azubi oder Betrieb? Wähle deinen Einstieg.</Text>
+
       <View style={styles.actions}>
-        <Button title="Einloggen" onPress={() => router.push('/(public)/login')} />
+        <Button
+          title="Ich bin Azubi"
+          onPress={() => router.push('/(public)/signup?role=azubi')}
+        />
         <View style={{ height: 12 }} />
-        <Button title="Konto erstellen" onPress={() => router.push('/(public)/signup')} />
+        <Button
+          title="Ich bin Betrieb"
+          onPress={() => router.push('/(public)/signup?role=betrieb')}
+        />
+
+        <View style={{ height: 24 }} />
+
+        <Button
+          title="Ich habe schon ein Konto (Login)"
+          onPress={() => router.push('/(public)/login')}
+        />
       </View>
     </View>
   );
