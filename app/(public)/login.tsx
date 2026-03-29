@@ -51,8 +51,6 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <BackToWelcomeButton />
-
       <Text style={styles.title}>Einloggen</Text>
 
       <TextInput
@@ -79,6 +77,10 @@ export default function Login() {
         onPress={onLogin}
         loading={loading}
       />
+
+      <View style={{ height: 16 }} />
+
+      <BackToWelcomeButton />
     </View>
   );
 }

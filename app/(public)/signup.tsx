@@ -44,8 +44,6 @@ export default function Signup() {
 
   return (
     <View style={styles.container}>
-      <BackToWelcomeButton />
-
       <Text style={styles.title}>Konto erstellen</Text>
       <Text style={styles.subtitle}>
         Rolle: {role === 'azubi' ? 'Azubi' : 'Betrieb'}
@@ -75,6 +73,10 @@ export default function Signup() {
         onPress={onSignup}
         loading={loading}
       />
+
+      <View style={{ height: 16 }} />
+
+      <BackToWelcomeButton />
     </View>
   );
 }
