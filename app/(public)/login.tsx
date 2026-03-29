@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
 import Button from '@/components/Button';
+import BackToWelcomeButton from '@/components/BackToWelcomeButton';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 
@@ -50,6 +51,8 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
+      <BackToWelcomeButton />
+
       <Text style={styles.title}>Einloggen</Text>
 
       <TextInput

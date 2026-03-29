@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
 import Button from '@/components/Button';
+import BackToWelcomeButton from '@/components/BackToWelcomeButton';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 
@@ -43,8 +44,12 @@ export default function Signup() {
 
   return (
     <View style={styles.container}>
+      <BackToWelcomeButton />
+
       <Text style={styles.title}>Konto erstellen</Text>
-      <Text style={styles.subtitle}>Rolle: {role === 'azubi' ? 'Azubi' : 'Betrieb'}</Text>
+      <Text style={styles.subtitle}>
+        Rolle: {role === 'azubi' ? 'Azubi' : 'Betrieb'}
+      </Text>
 
       <TextInput
         value={email}
@@ -64,14 +69,36 @@ export default function Signup() {
       />
 
       <View style={{ height: 12 }} />
-      <Button title="Konto erstellen" onPress={onSignup} loading={loading} />
+
+      <Button
+        title="Konto erstellen"
+        onPress={onSignup}
+        loading={loading}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 4 },
-  subtitle: { color: '#6b7280', marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 12 },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+    gap: 12,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  subtitle: {
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    padding: 12,
+  },
 });
