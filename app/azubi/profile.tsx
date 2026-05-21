@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, Alert, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/lib/supabase';
 
 type Trade = { id: string; name: string };
 
@@ -22,6 +22,13 @@ export default function AzubiProfile() {
   const [city, setCity] = useState('');
   const [email, setEmail] = useState('');
   const [whatsappLink, setWhatsappLink] = useState('');
+
+  const [originalAddress, setOriginalAddress] = useState({
+    street: '',
+    houseNo: '',
+    plz: '',
+    city: '',
+  });
 
   const isValid = useMemo(() => {
     const hasContact =
@@ -68,7 +75,6 @@ export default function AzubiProfile() {
       return Alert.alert('Nicht eingeloggt', 'Bitte erneut einloggen.');
     }
 
-    // Trades laden
     const { data: tData, error: tErr } = await supabase
       .from('trades')
       .select('id,name')
@@ -82,7 +88,6 @@ export default function AzubiProfile() {
 
     setTrades(tData ?? []);
 
-    // Azubi-Profil laden
     const { data: aData, error: aErr } = await supabase
       .from('azubi_profiles')
       .select('*')
@@ -95,15 +100,27 @@ export default function AzubiProfile() {
     }
 
     if (aData) {
+      const loadedStreet = aData.street ?? '';
+      const loadedHouseNo = aData.house_no ?? '';
+      const loadedPlz = aData.plz ?? '';
+      const loadedCity = aData.city ?? '';
+
       setFirstName(aData.first_name ?? '');
       setLastName(aData.last_name ?? '');
-      setStreet(aData.street ?? '');
-      setHouseNo(aData.house_no ?? '');
-      setPlz(aData.plz ?? '');
-      setCity(aData.city ?? '');
+      setStreet(loadedStreet);
+      setHouseNo(loadedHouseNo);
+      setPlz(loadedPlz);
+      setCity(loadedCity);
       setSelectedTradeId(aData.trade_id ?? null);
       setEmail(aData.email ?? '');
       setWhatsappLink(aData.whatsapp_link ?? '');
+
+      setOriginalAddress({
+        street: loadedStreet,
+        houseNo: loadedHouseNo,
+        plz: loadedPlz,
+        city: loadedCity,
+      });
     }
 
     setLoading(false);
@@ -112,6 +129,30 @@ export default function AzubiProfile() {
   useEffect(() => {
     load();
   }, []);
+
+  const geocodeAddress = async () => {
+    const { data, error } = await supabase.functions.invoke('geocode-address', {
+      body: {
+        street: street.trim(),
+        houseNumber: houseNo.trim(),
+        postalCode: plz.trim(),
+        city: city.trim(),
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const latitude = Number(data?.latitude);
+    const longitude = Number(data?.longitude);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      throw new Error('INVALID_COORDINATES');
+    }
+
+    return { latitude, longitude };
+  };
 
   const onSave = async () => {
     if (!isValid) {
@@ -131,6 +172,24 @@ export default function AzubiProfile() {
       return Alert.alert('Nicht eingeloggt', 'Bitte erneut einloggen.');
     }
 
+    const addressChanged =
+      street.trim() !== originalAddress.street.trim() ||
+      houseNo.trim() !== originalAddress.houseNo.trim() ||
+      plz.trim() !== originalAddress.plz.trim() ||
+      city.trim() !== originalAddress.city.trim();
+
+    let coordinates: { latitude: number; longitude: number };
+
+    try {
+      coordinates = await geocodeAddress();
+    } catch (_error) {
+      setSaving(false);
+      return Alert.alert(
+        'Adresse nicht gefunden',
+        'Adresse konnte nicht eindeutig gefunden werden. Bitte überprüfe Straße, Hausnummer, PLZ und Ort.'
+      );
+    }
+
     const now = new Date().toISOString();
 
     const { error } = await supabase.from('azubi_profiles').upsert(
@@ -145,6 +204,9 @@ export default function AzubiProfile() {
         trade_id: selectedTradeId,
         email: email.trim() || null,
         whatsapp_link: whatsappLink.trim() || null,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        geocoded_at: now,
         consent_terms: true,
         consent_terms_at: now,
         consent_privacy: true,
@@ -156,6 +218,13 @@ export default function AzubiProfile() {
     setSaving(false);
 
     if (error) return Alert.alert('Fehler', `Speichern: ${error.message}`);
+
+    setOriginalAddress({
+      street: street.trim(),
+      houseNo: houseNo.trim(),
+      plz: plz.trim(),
+      city: city.trim(),
+    });
 
     Alert.alert('Gespeichert', 'Dein Profil wurde gespeichert.', [
       {
@@ -183,7 +252,6 @@ export default function AzubiProfile() {
     <ScrollView contentContainerStyle={{ padding: 24, gap: 12 }}>
       <Text style={{ fontSize: 20, fontWeight: '700' }}>Azubi Profil</Text>
 
-      {/* Quick Action */}
       <Pressable
         onPress={() => router.push('/azubi/companies')}
         style={{
@@ -295,7 +363,6 @@ export default function AzubiProfile() {
         </Text>
       </Pressable>
 
-      {/* Logout */}
       <Pressable
         onPress={onLogout}
         style={{

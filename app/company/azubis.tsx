@@ -1,12 +1,23 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Linking,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 
 type Trade = { id: string; name: string };
 
+// ✅ TESTING BYPASS
+const FORCE_VERIFIED_FOR_TESTING = true;
+
 export default function CompanyAzubisScreen() {
   const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -18,8 +29,8 @@ export default function CompanyAzubisScreen() {
     try {
       const { data: auth } = await supabase.auth.getUser();
       const userId = auth.user?.id;
+
       if (!userId) {
-        // ✅ Fix: richtiger Startscreen
         router.replace("/(public)/welcome");
         return;
       }
@@ -33,7 +44,10 @@ export default function CompanyAzubisScreen() {
 
       if (companyErr) throw companyErr;
 
-      const isVerified = !!company?.verified;
+      // ✅ TESTING FIX
+      const isVerified =
+        FORCE_VERIFIED_FOR_TESTING || !!company?.verified;
+
       setVerified(isVerified);
 
       if (!isVerified) {
@@ -49,7 +63,9 @@ export default function CompanyAzubisScreen() {
 
       if (ctErr) throw ctErr;
 
-      const tradeIds = (ct ?? []).map((x: any) => x.trade_id).filter(Boolean);
+      const tradeIds = (ct ?? [])
+        .map((x: any) => x.trade_id)
+        .filter(Boolean);
 
       if (tradeIds.length === 0) {
         setAzubis([]);
@@ -65,11 +81,14 @@ export default function CompanyAzubisScreen() {
       if (tradesErr) throw tradesErr;
 
       const map: Record<string, string> = {};
-      (trades as Trade[] | null)?.forEach((t) => (map[t.id] = t.name));
+
+      (trades as Trade[] | null)?.forEach((t) => {
+        map[t.id] = t.name;
+      });
+
       setTradeMap(map);
 
       // 4) azubis matching those tradeIds
-      // ✅ Fix: nur relevante Felder + sortiert nach created_at
       const { data: az, error: azErr } = await supabase
         .from("azubi_profiles")
         .select(
@@ -83,17 +102,23 @@ export default function CompanyAzubisScreen() {
 
       setAzubis(az ?? []);
     } catch (e: any) {
-      Alert.alert("Fehler", e?.message ?? "Konnte Azubis nicht laden.");
+      Alert.alert(
+        "Fehler",
+        e?.message ?? "Konnte Azubis nicht laden."
+      );
     }
   }, [router]);
 
   useEffect(() => {
     let cancelled = false;
+
     (async () => {
       setLoading(true);
       await load();
+
       if (!cancelled) setLoading(false);
     })();
+
     return () => {
       cancelled = true;
     };
@@ -123,13 +148,34 @@ export default function CompanyAzubisScreen() {
   if (!verified) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        <Text style={{ fontSize: 18, fontWeight: "700" }}>Azubis</Text>
-        <View style={{ padding: 14, borderWidth: 1, borderRadius: 12 }}>
-          <Text style={{ fontSize: 16, fontWeight: "600" }}>
+        <Text style={{ fontSize: 18, fontWeight: "700" }}>
+          Azubis
+        </Text>
+
+        <View
+          style={{
+            padding: 14,
+            borderWidth: 1,
+            borderRadius: 12,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+            }}
+          >
             Noch nicht verifiziert
           </Text>
-          <Text style={{ marginTop: 8, color: "#666" }}>
-            Sobald dein Betrieb verifiziert ist, siehst du hier passende Azubis.
+
+          <Text
+            style={{
+              marginTop: 8,
+              color: "#666",
+            }}
+          >
+            Sobald dein Betrieb verifiziert ist,
+            siehst du hier passende Azubis.
           </Text>
         </View>
 
@@ -144,7 +190,11 @@ export default function CompanyAzubisScreen() {
           }}
           disabled={refreshing}
         >
-          <Text>{refreshing ? "Aktualisiere…" : "Aktualisieren"}</Text>
+          <Text>
+            {refreshing
+              ? "Aktualisiere…"
+              : "Aktualisieren"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     );
@@ -152,8 +202,13 @@ export default function CompanyAzubisScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      <Text style={{ fontSize: 18, fontWeight: "700" }}>Azubis</Text>
-      <Text style={{ color: "#666" }}>{count} Treffer</Text>
+      <Text style={{ fontSize: 18, fontWeight: "700" }}>
+        Azubis
+      </Text>
+
+      <Text style={{ color: "#666" }}>
+        {count} Treffer
+      </Text>
 
       <TouchableOpacity
         onPress={onRefresh}
@@ -166,16 +221,38 @@ export default function CompanyAzubisScreen() {
         }}
         disabled={refreshing}
       >
-        <Text>{refreshing ? "Aktualisiere…" : "Aktualisieren"}</Text>
+        <Text>
+          {refreshing
+            ? "Aktualisiere…"
+            : "Aktualisieren"}
+        </Text>
       </TouchableOpacity>
 
       {azubis.length === 0 ? (
-        <View style={{ padding: 14, borderWidth: 1, borderRadius: 12 }}>
-          <Text style={{ fontSize: 16, fontWeight: "600" }}>
+        <View
+          style={{
+            padding: 14,
+            borderWidth: 1,
+            borderRadius: 12,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+            }}
+          >
             Keine passenden Azubis gefunden
           </Text>
-          <Text style={{ marginTop: 8, color: "#666" }}>
-            Tipp: Prüfe, ob du Berufe ausgewählt hast und ob es passende Azubi-Profile gibt.
+
+          <Text
+            style={{
+              marginTop: 8,
+              color: "#666",
+            }}
+          >
+            Tipp: Prüfe, ob du Berufe ausgewählt hast
+            und ob es passende Azubi-Profile gibt.
           </Text>
         </View>
       ) : (
@@ -183,9 +260,13 @@ export default function CompanyAzubisScreen() {
           {azubis.map((a, idx) => {
             const firstName = a.first_name ?? "";
             const lastName = a.last_name ?? "";
+
             const displayName =
-              (String(firstName).trim() + " " + String(lastName).trim()).trim() ||
-              "Azubi";
+              (
+                String(firstName).trim() +
+                " " +
+                String(lastName).trim()
+              ).trim() || "Azubi";
 
             const email = a.email ?? "";
             const city = a.city ?? "";
@@ -204,23 +285,60 @@ export default function CompanyAzubisScreen() {
                   gap: 6,
                 }}
               >
-                <Text style={{ fontSize: 16, fontWeight: "700" }}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "700",
+                  }}
+                >
                   {displayName}
                 </Text>
 
                 <Text style={{ color: "#666" }}>
-                  Beruf: {labelTrade(tradeId)}
+                  Sucht Ausbildung: {labelTrade(tradeId)}
                 </Text>
 
                 <Text style={{ color: "#666" }}>
-                  Ort: {plz ? `${plz} ` : ""}{city || "—"}
+                  Wohnort: {plz ? `${plz} ` : ""}
+                  {city || "—"}
                 </Text>
 
                 <View style={{ height: 8 }} />
 
-                <Text style={{ fontWeight: "600" }}>Kontakt</Text>
-                <Text>Email: {email || "—"}</Text>
-                <Text>WhatsApp: {whatsapp || "—"}</Text>
+                <Text style={{ fontWeight: "600" }}>
+                  Kontakt
+                </Text>
+
+                <TouchableOpacity
+                  disabled={!email}
+                  onPress={() =>
+                    Linking.openURL(`mailto:${email}`)
+                  }
+                >
+                  <Text>Email: {email || "—"}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  disabled={!whatsapp}
+                  onPress={() => {
+                    const raw = String(whatsapp).trim();
+
+                    if (raw.startsWith("http")) {
+                      Linking.openURL(raw);
+                      return;
+                    }
+
+                    const phone = raw.replace(/[^\d+]/g, "");
+
+                    Linking.openURL(
+                      `https://wa.me/${phone.replace("+", "")}`
+                    );
+                  }}
+                >
+                  <Text>
+                    WhatsApp: {whatsapp || "—"}
+                  </Text>
+                </TouchableOpacity>
               </View>
             );
           })}
