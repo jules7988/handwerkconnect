@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -14,6 +14,8 @@ import { supabase } from "@/lib/supabase";
 
 export default function CompanyProfileScreen() {
   const router = useRouter();
+  const scrollViewRef = useRef<ScrollView | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -29,6 +31,12 @@ export default function CompanyProfileScreen() {
   const [trainingCity, setTrainingCity] = useState("");
 
   const [consent, setConsent] = useState(false);
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 350);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -99,33 +107,12 @@ export default function CompanyProfileScreen() {
 
   async function onSave() {
     if (!name.trim()) return Alert.alert("Fehlt", "Bitte Firmenname eintragen.");
-
-    if (!contactName.trim()) {
-      return Alert.alert("Fehlt", "Bitte Ansprechpartner eintragen.");
-    }
-
-    if (!trainingStreet.trim()) {
-      return Alert.alert("Fehlt", "Bitte Straße des Ausbildungsstandorts eintragen.");
-    }
-
-    if (!trainingHouseNumber.trim()) {
-      return Alert.alert(
-        "Fehlt",
-        "Bitte Hausnummer des Ausbildungsstandorts eintragen."
-      );
-    }
-
-    if (!trainingPostalCode.trim()) {
-      return Alert.alert("Fehlt", "Bitte PLZ des Ausbildungsstandorts eintragen.");
-    }
-
-    if (!trainingCity.trim()) {
-      return Alert.alert("Fehlt", "Bitte Stadt des Ausbildungsstandorts eintragen.");
-    }
-
-    if (!consent) {
-      return Alert.alert("Einwilligung", "Bitte Consent bestätigen.");
-    }
+    if (!contactName.trim()) return Alert.alert("Fehlt", "Bitte Ansprechpartner eintragen.");
+    if (!trainingStreet.trim()) return Alert.alert("Fehlt", "Bitte Straße des Ausbildungsstandorts eintragen.");
+    if (!trainingHouseNumber.trim()) return Alert.alert("Fehlt", "Bitte Hausnummer des Ausbildungsstandorts eintragen.");
+    if (!trainingPostalCode.trim()) return Alert.alert("Fehlt", "Bitte PLZ des Ausbildungsstandorts eintragen.");
+    if (!trainingCity.trim()) return Alert.alert("Fehlt", "Bitte Stadt des Ausbildungsstandorts eintragen.");
+    if (!consent) return Alert.alert("Einwilligung", "Bitte Consent bestätigen.");
 
     setSaving(true);
 
@@ -135,31 +122,25 @@ export default function CompanyProfileScreen() {
       if (!userId) throw new Error("Nicht eingeloggt.");
 
       const coordinates = await geocodeTrainingAddress();
-
       const now = new Date().toISOString();
 
       const { error } = await supabase.from("companies").upsert(
         {
           user_id: userId,
-
           company_name: name.trim(),
           contact_person: contactName.trim(),
           phone: phone.trim() || null,
           contact_email: contactEmail.trim() || null,
           website: website.trim() || null,
-
           training_street: trainingStreet.trim(),
           training_house_number: trainingHouseNumber.trim(),
           training_postal_code: trainingPostalCode.trim(),
           training_city: trainingCity.trim(),
-
           plz: trainingPostalCode.trim(),
           city: trainingCity.trim(),
-
           latitude: coordinates.latitude,
           longitude: coordinates.longitude,
           geocoded_at: now,
-
           consent: true,
           consent_terms: true,
           consent_privacy: true,
@@ -206,83 +187,34 @@ export default function CompanyProfileScreen() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={0}
     >
       <ScrollView
+        ref={scrollViewRef}
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
         contentContainerStyle={{
           padding: 16,
           gap: 12,
-          paddingBottom: 140,
+          paddingBottom: 280,
         }}
       >
         <Text style={{ fontSize: 16, fontWeight: "600" }}>Betriebsprofil</Text>
 
         <Field label="Firmenname *" value={name} onChangeText={setName} />
+        <Field label="Ansprechpartner *" value={contactName} onChangeText={setContactName} />
+        <Field label="Telefon" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+        <Field label="Kontakt E-Mail-Adresse" value={contactEmail} onChangeText={setContactEmail} keyboardType="email-address" autoCapitalize="none" />
+        <Field label="Website" value={website} onChangeText={setWebsite} autoCapitalize="none" />
 
-        <Field
-          label="Ansprechpartner *"
-          value={contactName}
-          onChangeText={setContactName}
-        />
-
-        <Field
-          label="Telefon"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
-
-        <Field
-          label="Kontakt E-Mail-Adresse"
-          value={contactEmail}
-          onChangeText={setContactEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <Field
-          label="Website"
-          value={website}
-          onChangeText={setWebsite}
-          autoCapitalize="none"
-        />
-
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "600",
-            marginTop: 8,
-          }}
-        >
+        <Text style={{ fontSize: 16, fontWeight: "600", marginTop: 8 }}>
           Ausbildungsstandort
         </Text>
 
-        <Field
-          label="Straße *"
-          value={trainingStreet}
-          onChangeText={setTrainingStreet}
-        />
-
-        <Field
-          label="Hausnummer *"
-          value={trainingHouseNumber}
-          onChangeText={setTrainingHouseNumber}
-        />
-
-        <Field
-          label="PLZ *"
-          value={trainingPostalCode}
-          onChangeText={setTrainingPostalCode}
-          keyboardType="number-pad"
-        />
-
-        <Field
-          label="Stadt *"
-          value={trainingCity}
-          onChangeText={setTrainingCity}
-        />
+        <Field label="Straße *" value={trainingStreet} onChangeText={setTrainingStreet} />
+        <Field label="Hausnummer *" value={trainingHouseNumber} onChangeText={setTrainingHouseNumber} onFocus={scrollToBottom} />
+        <Field label="PLZ *" value={trainingPostalCode} onChangeText={setTrainingPostalCode} keyboardType="number-pad" onFocus={scrollToBottom} />
+        <Field label="Stadt *" value={trainingCity} onChangeText={setTrainingCity} onFocus={scrollToBottom} />
 
         <TouchableOpacity
           onPress={() => setConsent((v) => !v)}
@@ -325,6 +257,7 @@ function Field(props: {
   onChangeText: (t: string) => void;
   keyboardType?: any;
   autoCapitalize?: any;
+  onFocus?: () => void;
 }) {
   return (
     <View style={{ gap: 6 }}>
@@ -334,6 +267,7 @@ function Field(props: {
         onChangeText={props.onChangeText}
         keyboardType={props.keyboardType}
         autoCapitalize={props.autoCapitalize ?? "sentences"}
+        onFocus={props.onFocus}
         style={{
           borderWidth: 1,
           borderColor: "#999",
