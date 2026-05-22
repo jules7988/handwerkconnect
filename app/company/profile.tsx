@@ -32,9 +32,30 @@ export default function CompanyProfileScreen() {
 
   const [consent, setConsent] = useState(false);
 
-  const scrollToBottom = () => {
+  const scrollToHouseNumber = () => {
     setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
+      scrollViewRef.current?.scrollTo({
+        y: 120,
+        animated: true,
+      });
+    }, 350);
+  };
+
+  const scrollToPostalCode = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({
+        y: 220,
+        animated: true,
+      });
+    }, 350);
+  };
+
+  const scrollToCity = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({
+        y: 300,
+        animated: true,
+      });
     }, 350);
   };
 
@@ -161,7 +182,8 @@ export default function CompanyProfileScreen() {
         message.includes("ADDRESS_NOT_FOUND") ||
         message.includes("GEOCODING_FAILED") ||
         message.includes("INVALID_COORDINATES") ||
-        message.includes("INTERNAL_ERROR")
+        message.includes("INTERNAL_ERROR") ||
+        message.includes("non-2xx status code")
       ) {
         Alert.alert(
           "Ausbildungsstandort nicht gefunden",
@@ -199,22 +221,81 @@ export default function CompanyProfileScreen() {
           paddingBottom: 280,
         }}
       >
-        <Text style={{ fontSize: 16, fontWeight: "600" }}>Betriebsprofil</Text>
+        <Text style={{ fontSize: 16, fontWeight: "600" }}>
+          Betriebsprofil
+        </Text>
 
-        <Field label="Firmenname *" value={name} onChangeText={setName} />
-        <Field label="Ansprechpartner *" value={contactName} onChangeText={setContactName} />
-        <Field label="Telefon" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-        <Field label="Kontakt E-Mail-Adresse" value={contactEmail} onChangeText={setContactEmail} keyboardType="email-address" autoCapitalize="none" />
-        <Field label="Website" value={website} onChangeText={setWebsite} autoCapitalize="none" />
+        <Field
+          label="Firmenname *"
+          value={name}
+          onChangeText={setName}
+        />
 
-        <Text style={{ fontSize: 16, fontWeight: "600", marginTop: 8 }}>
+        <Field
+          label="Ansprechpartner *"
+          value={contactName}
+          onChangeText={setContactName}
+        />
+
+        <Field
+          label="Telefon"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
+
+        <Field
+          label="Kontakt E-Mail-Adresse"
+          value={contactEmail}
+          onChangeText={setContactEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <Field
+          label="Website"
+          value={website}
+          onChangeText={setWebsite}
+          autoCapitalize="none"
+        />
+
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: "600",
+            marginTop: 8,
+          }}
+        >
           Ausbildungsstandort
         </Text>
 
-        <Field label="Straße *" value={trainingStreet} onChangeText={setTrainingStreet} />
-        <Field label="Hausnummer *" value={trainingHouseNumber} onChangeText={setTrainingHouseNumber} onFocus={scrollToBottom} />
-        <Field label="PLZ *" value={trainingPostalCode} onChangeText={setTrainingPostalCode} keyboardType="number-pad" onFocus={scrollToBottom} />
-        <Field label="Stadt *" value={trainingCity} onChangeText={setTrainingCity} onFocus={scrollToBottom} />
+        <Field
+          label="Straße *"
+          value={trainingStreet}
+          onChangeText={setTrainingStreet}
+        />
+
+        <Field
+          label="Hausnummer *"
+          value={trainingHouseNumber}
+          onChangeText={setTrainingHouseNumber}
+          onFocus={scrollToHouseNumber}
+        />
+
+        <Field
+          label="PLZ *"
+          value={trainingPostalCode}
+          onChangeText={setTrainingPostalCode}
+          keyboardType="number-pad"
+          onFocus={scrollToPostalCode}
+        />
+
+        <Field
+          label="Stadt *"
+          value={trainingCity}
+          onChangeText={setTrainingCity}
+          onFocus={scrollToCity}
+        />
 
         <TouchableOpacity
           onPress={() => setConsent((v) => !v)}
@@ -262,6 +343,7 @@ function Field(props: {
   return (
     <View style={{ gap: 6 }}>
       <Text style={{ color: "#444" }}>{props.label}</Text>
+
       <TextInput
         value={props.value}
         onChangeText={props.onChangeText}
