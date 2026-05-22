@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -194,112 +196,126 @@ export default function CompanyProfileScreen() {
 
   if (loading) {
     return (
-      <View style={{ padding: 16 }}>
+      <View style={{ flex: 1, padding: 16, justifyContent: "center" }}>
         <Text>Lade…</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      <Text style={{ fontSize: 16, fontWeight: "600" }}>Betriebsprofil</Text>
-
-      <Field label="Firmenname *" value={name} onChangeText={setName} />
-
-      <Field
-        label="Ansprechpartner *"
-        value={contactName}
-        onChangeText={setContactName}
-      />
-
-      <Field
-        label="Telefon"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
-
-      <Field
-        label="Kontakt E-Mail-Adresse"
-        value={contactEmail}
-        onChangeText={setContactEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <Field
-        label="Website"
-        value={website}
-        onChangeText={setWebsite}
-        autoCapitalize="none"
-      />
-
-      <Text
-        style={{
-          fontSize: 16,
-          fontWeight: "600",
-          marginTop: 8,
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={0}
+    >
+      <ScrollView
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          padding: 16,
+          gap: 12,
+          paddingBottom: 140,
         }}
       >
-        Ausbildungsstandort
-      </Text>
+        <Text style={{ fontSize: 16, fontWeight: "600" }}>Betriebsprofil</Text>
 
-      <Field
-        label="Straße *"
-        value={trainingStreet}
-        onChangeText={setTrainingStreet}
-      />
+        <Field label="Firmenname *" value={name} onChangeText={setName} />
 
-      <Field
-        label="Hausnummer *"
-        value={trainingHouseNumber}
-        onChangeText={setTrainingHouseNumber}
-      />
+        <Field
+          label="Ansprechpartner *"
+          value={contactName}
+          onChangeText={setContactName}
+        />
 
-      <Field
-        label="PLZ *"
-        value={trainingPostalCode}
-        onChangeText={setTrainingPostalCode}
-        keyboardType="number-pad"
-      />
+        <Field
+          label="Telefon"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
 
-      <Field
-        label="Stadt *"
-        value={trainingCity}
-        onChangeText={setTrainingCity}
-      />
+        <Field
+          label="Kontakt E-Mail-Adresse"
+          value={contactEmail}
+          onChangeText={setContactEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
 
-      <TouchableOpacity
-        onPress={() => setConsent((v) => !v)}
-        style={{
-          padding: 12,
-          borderWidth: 1,
-          borderColor: "#999",
-          borderRadius: 8,
-          flexDirection: "row",
-          justifyContent: "space-between",
-        }}
-      >
-        <Text>Einwilligung (Consent) *</Text>
-        <Text>{consent ? "✅" : "⬜️"}</Text>
-      </TouchableOpacity>
+        <Field
+          label="Website"
+          value={website}
+          onChangeText={setWebsite}
+          autoCapitalize="none"
+        />
 
-      <TouchableOpacity
-        onPress={onSave}
-        disabled={saving}
-        style={{
-          padding: 14,
-          borderRadius: 10,
-          alignItems: "center",
-          borderWidth: 1,
-          opacity: saving ? 0.6 : 1,
-        }}
-      >
-        <Text style={{ fontWeight: "600" }}>
-          {saving ? "Speichere…" : "Weiter"}
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: "600",
+            marginTop: 8,
+          }}
+        >
+          Ausbildungsstandort
         </Text>
-      </TouchableOpacity>
-    </ScrollView>
+
+        <Field
+          label="Straße *"
+          value={trainingStreet}
+          onChangeText={setTrainingStreet}
+        />
+
+        <Field
+          label="Hausnummer *"
+          value={trainingHouseNumber}
+          onChangeText={setTrainingHouseNumber}
+        />
+
+        <Field
+          label="PLZ *"
+          value={trainingPostalCode}
+          onChangeText={setTrainingPostalCode}
+          keyboardType="number-pad"
+        />
+
+        <Field
+          label="Stadt *"
+          value={trainingCity}
+          onChangeText={setTrainingCity}
+        />
+
+        <TouchableOpacity
+          onPress={() => setConsent((v) => !v)}
+          style={{
+            padding: 12,
+            borderWidth: 1,
+            borderColor: "#999",
+            borderRadius: 8,
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text>Einwilligung (Consent) *</Text>
+          <Text>{consent ? "✅" : "⬜️"}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onSave}
+          disabled={saving}
+          style={{
+            padding: 14,
+            borderRadius: 10,
+            alignItems: "center",
+            borderWidth: 1,
+            opacity: saving ? 0.6 : 1,
+          }}
+        >
+          <Text style={{ fontWeight: "600" }}>
+            {saving ? "Speichere…" : "Weiter"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
