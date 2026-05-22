@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -14,7 +14,6 @@ import { supabase } from "@/lib/supabase";
 
 export default function CompanyProfileScreen() {
   const router = useRouter();
-  const scrollViewRef = useRef<ScrollView | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -31,33 +30,6 @@ export default function CompanyProfileScreen() {
   const [trainingCity, setTrainingCity] = useState("");
 
   const [consent, setConsent] = useState(false);
-
-  const scrollToHouseNumber = () => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollTo({
-        y: 120,
-        animated: true,
-      });
-    }, 350);
-  };
-
-  const scrollToPostalCode = () => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollTo({
-        y: 220,
-        animated: true,
-      });
-    }, 350);
-  };
-
-  const scrollToCity = () => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollTo({
-        y: 300,
-        animated: true,
-      });
-    }, 350);
-  };
 
   useEffect(() => {
     let cancelled = false;
@@ -211,7 +183,6 @@ export default function CompanyProfileScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        ref={scrollViewRef}
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
@@ -225,11 +196,7 @@ export default function CompanyProfileScreen() {
           Betriebsprofil
         </Text>
 
-        <Field
-          label="Firmenname *"
-          value={name}
-          onChangeText={setName}
-        />
+        <Field label="Firmenname *" value={name} onChangeText={setName} />
 
         <Field
           label="Ansprechpartner *"
@@ -259,13 +226,7 @@ export default function CompanyProfileScreen() {
           autoCapitalize="none"
         />
 
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "600",
-            marginTop: 8,
-          }}
-        >
+        <Text style={{ fontSize: 16, fontWeight: "600", marginTop: 8 }}>
           Ausbildungsstandort
         </Text>
 
@@ -279,7 +240,6 @@ export default function CompanyProfileScreen() {
           label="Hausnummer *"
           value={trainingHouseNumber}
           onChangeText={setTrainingHouseNumber}
-          onFocus={scrollToHouseNumber}
         />
 
         <Field
@@ -287,14 +247,12 @@ export default function CompanyProfileScreen() {
           value={trainingPostalCode}
           onChangeText={setTrainingPostalCode}
           keyboardType="number-pad"
-          onFocus={scrollToPostalCode}
         />
 
         <Field
           label="Stadt *"
           value={trainingCity}
           onChangeText={setTrainingCity}
-          onFocus={scrollToCity}
         />
 
         <TouchableOpacity
@@ -338,7 +296,6 @@ function Field(props: {
   onChangeText: (t: string) => void;
   keyboardType?: any;
   autoCapitalize?: any;
-  onFocus?: () => void;
 }) {
   return (
     <View style={{ gap: 6 }}>
@@ -349,7 +306,6 @@ function Field(props: {
         onChangeText={props.onChangeText}
         keyboardType={props.keyboardType}
         autoCapitalize={props.autoCapitalize ?? "sentences"}
-        onFocus={props.onFocus}
         style={{
           borderWidth: 1,
           borderColor: "#999",
