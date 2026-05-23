@@ -315,7 +315,9 @@ export default function CompanyAzubisScreen() {
                     Linking.openURL(`mailto:${email}`)
                   }
                 >
-                  <Text>Email: {email || "—"}</Text>
+                  <Text style={{ color: email ? "#2563eb" : "#111" }}>
+                    Email: {email || "—"}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -335,7 +337,7 @@ export default function CompanyAzubisScreen() {
                     );
                   }}
                 >
-                  <Text>
+                  <Text style={{ color: whatsapp ? "#2563eb" : "#111" }}>
                     WhatsApp: {whatsapp || "—"}
                   </Text>
                 </TouchableOpacity>

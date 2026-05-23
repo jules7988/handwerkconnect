@@ -9,16 +9,18 @@ export default function Welcome() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Willkommen bei HandwerkConnect</Text>
-      <Text style={styles.subtitle}>Azubi oder Betrieb? Wähle deinen Einstieg.</Text>
+      <Text style={styles.subtitle}>
+        Suchst du einen Ausbildungsplatz oder bist du ein Betrieb und suchst Auszubildende?
+      </Text>
 
       <View style={styles.actions}>
         <Button
-          title="Ich bin Azubi"
+          title="Ich suche einen Ausbildungsplatz"
           onPress={() => router.push('/(public)/signup?role=azubi')}
         />
         <View style={{ height: 12 }} />
         <Button
-          title="Ich bin Betrieb"
+          title="Ich suche Azubis"
           onPress={() => router.push('/(public)/signup?role=betrieb')}
         />
 
