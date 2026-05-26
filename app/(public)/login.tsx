@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, Pressable } from 'react-native';
 import Button from '@/components/Button';
 import BackToWelcomeButton from '@/components/BackToWelcomeButton';
 import { useRouter } from 'expo-router';
@@ -16,7 +16,7 @@ export default function Login() {
       setLoading(true);
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password: pw,
       });
 
@@ -41,7 +41,6 @@ export default function Login() {
       } else {
         throw new Error(`Unbekannte Rolle: ${prof.role}`);
       }
-
     } catch (e: any) {
       Alert.alert('Login fehlgeschlagen', e.message ?? String(e));
     } finally {
@@ -57,6 +56,7 @@ export default function Login() {
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
+        autoCorrect={false}
         placeholder="E-Mail"
         keyboardType="email-address"
         style={styles.input}
@@ -72,13 +72,16 @@ export default function Login() {
 
       <View style={{ height: 12 }} />
 
-      <Button
-        title="Los geht's"
-        onPress={onLogin}
-        loading={loading}
-      />
+      <Button title="Los geht's" onPress={onLogin} loading={loading} />
 
-      <View style={{ height: 16 }} />
+      <Pressable
+        onPress={() => router.push('/(public)/forgot-password')}
+        style={styles.forgotButton}
+      >
+        <Text style={styles.forgotText}>Passwort vergessen?</Text>
+      </Pressable>
+
+      <View style={{ height: 8 }} />
 
       <BackToWelcomeButton />
     </View>
@@ -103,4 +106,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
+  forgotButton: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+ forgotText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#2563eb',
+},
 });
