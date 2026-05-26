@@ -20,7 +20,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: "com.jules88.handwerkconnect",
 
     // Neuer TestFlight Build
-    buildNumber: "28",
+    buildNumber: "29",
 
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false

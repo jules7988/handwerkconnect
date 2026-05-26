@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import { supabase } from '@/lib/supabase';
 
@@ -17,40 +17,47 @@ type RecoveryState = 'loading' | 'ready' | 'invalid';
 
 export default function ResetPassword() {
   const router = useRouter();
+  const params = useLocalSearchParams();
 
   const [state, setState] = useState<RecoveryState>('loading');
   const [newPassword, setNewPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const handledUrlRef = useRef<string | null>(null);
+  const handledRef = useRef(false);
 
-  const getParam = (url: string, key: string) => {
-    const normalizedUrl = url.replace('#', '?');
-    const parsedUrl = new URL(normalizedUrl);
-    return parsedUrl.searchParams.get(key);
+  const readParamFromUrl = (url: string, key: string) => {
+    const queryPart = url.split('?')[1]?.split('#')[0] ?? '';
+    const hashPart = url.split('#')[1] ?? '';
+    const combined = `${queryPart}&${hashPart}`;
+    const searchParams = new URLSearchParams(combined);
+    return searchParams.get(key);
+  };
+
+  const readParamFromRouter = (key: string) => {
+    const value = params[key];
+    if (Array.isArray(value)) return value[0];
+    return typeof value === 'string' ? value : null;
   };
 
   const establishRecoverySession = async (url: string | null) => {
     try {
+      if (handledRef.current) return;
+      handledRef.current = true;
+
       setState('loading');
 
-      if (!url) {
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          setState('ready');
-          return;
-        }
+      const code =
+        readParamFromRouter('code') ||
+        (url ? readParamFromUrl(url, 'code') : null);
 
-        throw new Error('Keine Recovery URL gefunden.');
-      }
+      const accessToken =
+        readParamFromRouter('access_token') ||
+        (url ? readParamFromUrl(url, 'access_token') : null);
 
-      if (handledUrlRef.current === url) return;
-      handledUrlRef.current = url;
-
-      const code = getParam(url, 'code');
-      const accessToken = getParam(url, 'access_token');
-      const refreshToken = getParam(url, 'refresh_token');
+      const refreshToken =
+        readParamFromRouter('refresh_token') ||
+        (url ? readParamFromUrl(url, 'refresh_token') : null);
 
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -77,11 +84,8 @@ export default function ResetPassword() {
   };
 
   useEffect(() => {
-    let active = true;
-
     const init = async () => {
       const initialUrl = await Linking.getInitialURL();
-      if (!active) return;
       await establishRecoverySession(initialUrl);
     };
 
@@ -92,7 +96,6 @@ export default function ResetPassword() {
     });
 
     return () => {
-      active = false;
       subscription.remove();
     };
   }, []);
@@ -124,21 +127,14 @@ export default function ResetPassword() {
       Alert.alert(
         'Passwort geändert',
         'Dein Passwort wurde geändert. Du kannst dich jetzt einloggen.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(public)/login'),
-          },
-        ]
+        [{ text: 'OK', onPress: () => router.replace('/(public)/login') }]
       );
     } catch {
       await supabase.auth.signOut();
-
       Alert.alert(
         'Fehler',
         'Dein Passwort konnte nicht geändert werden. Bitte fordere einen neuen Link an.'
       );
-
       setState('invalid');
     } finally {
       setSaving(false);
@@ -206,11 +202,7 @@ export default function ResetPassword() {
 
       <View style={{ height: 12 }} />
 
-      <Button
-        title="Passwort speichern"
-        onPress={onSavePassword}
-        loading={saving}
-      />
+      <Button title="Passwort speichern" onPress={onSavePassword} loading={saving} />
 
       <Pressable
         onPress={() => router.replace('/(public)/login')}
