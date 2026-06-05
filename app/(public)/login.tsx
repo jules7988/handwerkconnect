@@ -12,11 +12,23 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const onLogin = async () => {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      Alert.alert('E-Mail fehlt', 'Bitte gib deine E-Mail-Adresse ein.');
+      return;
+    }
+
+    if (!pw) {
+      Alert.alert('Passwort fehlt', 'Bitte gib dein Passwort ein.');
+      return;
+    }
+
     try {
       setLoading(true);
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: trimmedEmail,
         password: pw,
       });
 
@@ -29,18 +41,26 @@ export default function Login() {
         .from('profiles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (pErr) throw new Error(`profiles read: ${pErr.message}`);
-      if (!prof?.role) throw new Error('Keine Rolle im Profil gefunden.');
+
+      if (!prof?.role) {
+        router.replace('/(public)/welcome');
+        return;
+      }
 
       if (prof.role === 'azubi') {
         router.replace('/azubi/profile');
-      } else if (prof.role === 'betrieb') {
-        router.replace('/company/profile');
-      } else {
-        throw new Error(`Unbekannte Rolle: ${prof.role}`);
+        return;
       }
+
+      if (prof.role === 'betrieb') {
+        router.replace('/company/profile');
+        return;
+      }
+
+      throw new Error(`Unbekannte Rolle: ${prof.role}`);
     } catch (e: any) {
       Alert.alert('Login fehlgeschlagen', e.message ?? String(e));
     } finally {
@@ -60,6 +80,7 @@ export default function Login() {
         placeholder="E-Mail"
         keyboardType="email-address"
         style={styles.input}
+        editable={!loading}
       />
 
       <TextInput
@@ -68,6 +89,7 @@ export default function Login() {
         placeholder="Passwort"
         secureTextEntry
         style={styles.input}
+        editable={!loading}
       />
 
       <View style={{ height: 12 }} />
@@ -77,6 +99,7 @@ export default function Login() {
       <Pressable
         onPress={() => router.push('/(public)/forgot-password')}
         style={styles.forgotButton}
+        disabled={loading}
       >
         <Text style={styles.forgotText}>Passwort vergessen?</Text>
       </Pressable>
@@ -111,9 +134,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
- forgotText: {
-  fontSize: 14,
-  fontWeight: '600',
-  color: '#2563eb',
-},
+  forgotText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2563eb',
+  },
 });

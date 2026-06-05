@@ -8,6 +8,7 @@ import {
   Pressable,
   ActivityIndicator,
   Linking,
+  ScrollView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Button from '@/components/Button';
@@ -36,16 +37,23 @@ export default function ResetPassword() {
 
   const readParamFromRouter = (key: string) => {
     const value = params[key];
+
     if (Array.isArray(value)) return value[0];
+
     return typeof value === 'string' ? value : null;
   };
 
   const establishRecoverySession = async (url: string | null) => {
     try {
       if (handledRef.current) return;
-      handledRef.current = true;
 
       setState('loading');
+
+      const hasRouterParams = Object.keys(params).length > 0;
+
+      if (!url && !hasRouterParams) return;
+
+      handledRef.current = true;
 
       const code =
         readParamFromRouter('code') ||
@@ -59,22 +67,43 @@ export default function ResetPassword() {
         readParamFromRouter('refresh_token') ||
         (url ? readParamFromUrl(url, 'refresh_token') : null);
 
+      const tokenHash =
+        readParamFromRouter('token_hash') ||
+        (url ? readParamFromUrl(url, 'token_hash') : null);
+
+      const type =
+        readParamFromRouter('type') ||
+        (url ? readParamFromUrl(url, 'type') : null);
+
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
+
         if (error) throw error;
       } else if (accessToken && refreshToken) {
         const { error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         });
+
+        if (error) throw error;
+      } else if (tokenHash && type === 'recovery') {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'recovery',
+        });
+
         if (error) throw error;
       } else {
         throw new Error('Recovery Parameter fehlen.');
       }
 
       const { data, error } = await supabase.auth.getSession();
+
       if (error) throw error;
-      if (!data.session) throw new Error('Keine gültige Recovery Session.');
+
+      if (!data.session) {
+        throw new Error('Keine gültige Recovery Session.');
+      }
 
       setState('ready');
     } catch {
@@ -104,12 +133,18 @@ export default function ResetPassword() {
     if (saving) return;
 
     if (newPassword.length < 8) {
-      Alert.alert('Passwort zu kurz', 'Das Passwort muss mindestens 8 Zeichen lang sein.');
+      Alert.alert(
+        'Passwort zu kurz',
+        'Das Passwort muss mindestens 8 Zeichen lang sein.'
+      );
       return;
     }
 
     if (newPassword !== repeatPassword) {
-      Alert.alert('Passwörter stimmen nicht überein', 'Bitte gib zweimal dasselbe Passwort ein.');
+      Alert.alert(
+        'Passwörter stimmen nicht überein',
+        'Bitte gib zweimal dasselbe Passwort ein.'
+      );
       return;
     }
 
@@ -127,14 +162,21 @@ export default function ResetPassword() {
       Alert.alert(
         'Passwort geändert',
         'Dein Passwort wurde geändert. Du kannst dich jetzt einloggen.',
-        [{ text: 'OK', onPress: () => router.replace('/(public)/login') }]
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(public)/login'),
+          },
+        ]
       );
     } catch {
       await supabase.auth.signOut();
+
       Alert.alert(
         'Fehler',
         'Dein Passwort konnte nicht geändert werden. Bitte fordere einen neuen Link an.'
       );
+
       setState('invalid');
     } finally {
       setSaving(false);
@@ -152,7 +194,7 @@ export default function ResetPassword() {
 
   if (state === 'invalid') {
     return (
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Link ungültig</Text>
 
         <Text style={styles.description}>
@@ -170,12 +212,12 @@ export default function ResetPassword() {
         >
           <Text style={styles.backText}>Zurück zum Login</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Neues Passwort vergeben</Text>
 
       <Text style={styles.description}>
@@ -202,7 +244,11 @@ export default function ResetPassword() {
 
       <View style={{ height: 12 }} />
 
-      <Button title="Passwort speichern" onPress={onSavePassword} loading={saving} />
+      <Button
+        title="Passwort speichern"
+        onPress={onSavePassword}
+        loading={saving}
+      />
 
       <Pressable
         onPress={() => router.replace('/(public)/login')}
@@ -211,13 +257,13 @@ export default function ResetPassword() {
       >
         <Text style={styles.backText}>Zurück zum Login</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
     gap: 12,
@@ -232,6 +278,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: '#374151',
     marginBottom: 8,
+    textAlign: 'center',
   },
   input: {
     borderWidth: 1,

@@ -30,9 +30,8 @@ export default function ForgotPassword() {
       setLoading(true);
 
       const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-        redirectTo: 'handwerkconnect://reset-password',
+        redirectTo: 'handwerkconnect:///reset-password',
       });
-      
 
       if (error) throw error;
 
@@ -71,11 +70,7 @@ export default function ForgotPassword() {
 
       <View style={{ height: 12 }} />
 
-      <Button
-        title="Reset-Link senden"
-        onPress={onSendResetLink}
-        loading={loading}
-      />
+      <Button title="Reset-Link senden" onPress={onSendResetLink} loading={loading} />
 
       <Pressable
         onPress={() => router.replace('/(public)/login')}
