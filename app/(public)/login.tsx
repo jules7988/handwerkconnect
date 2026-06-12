@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Alert,
+  Pressable,
+} from 'react-native';
 import Button from '@/components/Button';
 import BackToWelcomeButton from '@/components/BackToWelcomeButton';
+import LegalLinks from '@/components/LegalLinks';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 
@@ -94,7 +102,11 @@ export default function Login() {
 
       <View style={{ height: 12 }} />
 
-      <Button title="Los geht's" onPress={onLogin} loading={loading} />
+      <Button
+        title="Los geht's"
+        onPress={onLogin}
+        loading={loading}
+      />
 
       <Pressable
         onPress={() => router.push('/(public)/forgot-password')}
@@ -107,6 +119,8 @@ export default function Login() {
       <View style={{ height: 8 }} />
 
       <BackToWelcomeButton />
+
+      <LegalLinks />
     </View>
   );
 }

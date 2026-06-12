@@ -29,8 +29,6 @@ export default function CompanyProfileScreen() {
   const [trainingPostalCode, setTrainingPostalCode] = useState("");
   const [trainingCity, setTrainingCity] = useState("");
 
-  const [consent, setConsent] = useState(false);
-
   useEffect(() => {
     let cancelled = false;
 
@@ -59,8 +57,6 @@ export default function CompanyProfileScreen() {
           setTrainingHouseNumber(data.training_house_number ?? "");
           setTrainingPostalCode(data.training_postal_code ?? data.plz ?? "");
           setTrainingCity(data.training_city ?? data.city ?? "");
-
-          setConsent(!!data.consent);
         }
       } catch (e: any) {
         Alert.alert("Fehler", e?.message ?? "Konnte Profil nicht laden.");
@@ -105,7 +101,6 @@ export default function CompanyProfileScreen() {
     if (!trainingHouseNumber.trim()) return Alert.alert("Fehlt", "Bitte Hausnummer des Ausbildungsstandorts eintragen.");
     if (!trainingPostalCode.trim()) return Alert.alert("Fehlt", "Bitte PLZ des Ausbildungsstandorts eintragen.");
     if (!trainingCity.trim()) return Alert.alert("Fehlt", "Bitte Stadt des Ausbildungsstandorts eintragen.");
-    if (!consent) return Alert.alert("Einwilligung", "Bitte Consent bestätigen.");
 
     setSaving(true);
 
@@ -134,11 +129,6 @@ export default function CompanyProfileScreen() {
           latitude: coordinates.latitude,
           longitude: coordinates.longitude,
           geocoded_at: now,
-          consent: true,
-          consent_terms: true,
-          consent_privacy: true,
-          consent_terms_at: now,
-          consent_privacy_at: now,
         },
         { onConflict: "user_id" }
       );
@@ -254,21 +244,6 @@ export default function CompanyProfileScreen() {
           value={trainingCity}
           onChangeText={setTrainingCity}
         />
-
-        <TouchableOpacity
-          onPress={() => setConsent((v) => !v)}
-          style={{
-            padding: 12,
-            borderWidth: 1,
-            borderColor: "#999",
-            borderRadius: 8,
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
-        >
-          <Text>Einwilligung (Consent) *</Text>
-          <Text>{consent ? "✅" : "⬜️"}</Text>
-        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={onSave}

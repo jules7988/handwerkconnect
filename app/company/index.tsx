@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import LegalLinks from "@/components/LegalLinks";
 
 const FORCE_VERIFIED_FOR_TESTING = true;
 
@@ -125,6 +126,8 @@ export default function CompanyDashboard() {
       >
         <Text>Logout</Text>
       </TouchableOpacity>
+
+      <LegalLinks />
     </ScrollView>
   );
 }

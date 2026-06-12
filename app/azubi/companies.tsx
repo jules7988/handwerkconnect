@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import { supabase } from '@/lib/supabase';
+import LegalLinks from '@/components/LegalLinks';
 
 type CompanyRow = {
   company_user_id: string;
@@ -293,6 +294,8 @@ export default function AzubiCompanies() {
         )}
 
         <View style={{ height: 24 }} />
+
+        <LegalLinks />
       </ScrollView>
 
       <Modal

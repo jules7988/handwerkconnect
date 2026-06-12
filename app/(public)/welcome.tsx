@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Button from '@/components/Button';
+import LegalLinks from '@/components/LegalLinks';
 import { useRouter } from 'expo-router';
 
 export default function Welcome() {
@@ -18,7 +19,9 @@ export default function Welcome() {
           title="Ich suche einen Ausbildungsplatz"
           onPress={() => router.push('/(public)/signup?role=azubi')}
         />
+
         <View style={{ height: 12 }} />
+
         <Button
           title="Ich suche Azubis"
           onPress={() => router.push('/(public)/signup?role=betrieb')}
@@ -30,6 +33,8 @@ export default function Welcome() {
           title="Ich habe schon ein Konto (Login)"
           onPress={() => router.push('/(public)/login')}
         />
+
+        <LegalLinks />
       </View>
     </View>
   );
