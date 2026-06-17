@@ -19,8 +19,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: false,
     bundleIdentifier: "com.jules88.handwerkconnect",
 
-    // TestFlight Build 32
-    buildNumber: "32",
+    // TestFlight Build 34
+    buildNumber: "34",
 
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false
