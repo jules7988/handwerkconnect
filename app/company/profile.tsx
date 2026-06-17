@@ -17,6 +17,7 @@ export default function CompanyProfileScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hasTrades, setHasTrades] = useState(false);
 
   const [name, setName] = useState("");
   const [contactName, setContactName] = useState("");
@@ -36,7 +37,11 @@ export default function CompanyProfileScreen() {
       try {
         const { data: auth } = await supabase.auth.getUser();
         const userId = auth.user?.id;
-        if (!userId) return;
+
+        if (!userId) {
+          router.replace("/(public)/welcome");
+          return;
+        }
 
         const { data, error } = await supabase
           .from("companies")
@@ -46,17 +51,28 @@ export default function CompanyProfileScreen() {
 
         if (error) throw error;
 
-        if (!cancelled && data) {
-          setName(data.company_name ?? "");
-          setContactName(data.contact_person ?? "");
-          setPhone(data.phone ?? "");
-          setContactEmail(data.contact_email ?? "");
-          setWebsite(data.website ?? "");
+        const { data: tradeRows, error: tradeError } = await supabase
+          .from("company_trades")
+          .select("trade_id")
+          .eq("company_id", userId);
 
-          setTrainingStreet(data.training_street ?? "");
-          setTrainingHouseNumber(data.training_house_number ?? "");
-          setTrainingPostalCode(data.training_postal_code ?? data.plz ?? "");
-          setTrainingCity(data.training_city ?? data.city ?? "");
+        if (tradeError) throw tradeError;
+
+        if (!cancelled) {
+          setHasTrades((tradeRows ?? []).length > 0);
+
+          if (data) {
+            setName(data.company_name ?? "");
+            setContactName(data.contact_person ?? "");
+            setPhone(data.phone ?? "");
+            setContactEmail(data.contact_email ?? "");
+            setWebsite(data.website ?? "");
+
+            setTrainingStreet(data.training_street ?? "");
+            setTrainingHouseNumber(data.training_house_number ?? "");
+            setTrainingPostalCode(data.training_postal_code ?? data.plz ?? "");
+            setTrainingCity(data.training_city ?? data.city ?? "");
+          }
         }
       } catch (e: any) {
         Alert.alert("Fehler", e?.message ?? "Konnte Profil nicht laden.");
@@ -68,7 +84,7 @@ export default function CompanyProfileScreen() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   async function geocodeTrainingAddress() {
     const { data, error } = await supabase.functions.invoke("geocode-address", {
@@ -80,9 +96,7 @@ export default function CompanyProfileScreen() {
       },
     });
 
-    if (error) {
-      throw new Error(error.message);
-    }
+    if (error) throw new Error(error.message);
 
     const latitude = Number(data?.latitude);
     const longitude = Number(data?.longitude);
@@ -135,7 +149,11 @@ export default function CompanyProfileScreen() {
 
       if (error) throw error;
 
-      router.replace("/company/trades");
+      if (hasTrades) {
+        router.replace("/company");
+      } else {
+        router.replace("/company/trades");
+      }
     } catch (e: any) {
       const message = String(e?.message ?? "");
 
@@ -166,6 +184,8 @@ export default function CompanyProfileScreen() {
       </View>
     );
   }
+
+  const buttonLabel = hasTrades ? "Speichern" : "Weiter";
 
   return (
     <KeyboardAvoidingView
@@ -257,7 +277,7 @@ export default function CompanyProfileScreen() {
           }}
         >
           <Text style={{ fontWeight: "600" }}>
-            {saving ? "Speichere…" : "Weiter"}
+            {saving ? "Speichere…" : buttonLabel}
           </Text>
         </TouchableOpacity>
       </ScrollView>

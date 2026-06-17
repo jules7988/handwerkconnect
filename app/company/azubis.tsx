@@ -12,22 +12,20 @@ import { supabase } from "@/lib/supabase";
 
 type Trade = { id: string; name: string };
 
-// ✅ TESTING BYPASS
-const FORCE_VERIFIED_FOR_TESTING = true;
-
 export default function CompanyAzubisScreen() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const [verified, setVerified] = useState(false);
   const [tradeMap, setTradeMap] = useState<Record<string, string>>({});
   const [azubis, setAzubis] = useState<any[]>([]);
 
   const load = useCallback(async () => {
     try {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+
       const userId = auth.user?.id;
 
       if (!userId) {
@@ -35,7 +33,6 @@ export default function CompanyAzubisScreen() {
         return;
       }
 
-      // 1) company status
       const { data: company, error: companyErr } = await supabase
         .from("companies")
         .select("verified")
@@ -44,18 +41,18 @@ export default function CompanyAzubisScreen() {
 
       if (companyErr) throw companyErr;
 
-      // ✅ TESTING FIX
-      const isVerified =
-        FORCE_VERIFIED_FOR_TESTING || !!company?.verified;
-
-      setVerified(isVerified);
-
-      if (!isVerified) {
+      if (!company?.verified) {
         setAzubis([]);
+
+        Alert.alert(
+          "Verifizierung erforderlich",
+          "Bevor Sie passende Azubis sehen können, ist erst eine Verifizierung notwendig. Bitte haben Sie noch ein wenig Geduld. Es ist uns wichtig, die Daten der Azubis zu schützen."
+        );
+
+        router.replace("/company");
         return;
       }
 
-      // 2) company trades
       const { data: ct, error: ctErr } = await supabase
         .from("company_trades")
         .select("trade_id")
@@ -72,7 +69,6 @@ export default function CompanyAzubisScreen() {
         return;
       }
 
-      // 3) trade names for display
       const { data: trades, error: tradesErr } = await supabase
         .from("trades")
         .select("id, name")
@@ -88,7 +84,6 @@ export default function CompanyAzubisScreen() {
 
       setTradeMap(map);
 
-      // 4) azubis matching those tradeIds
       const { data: az, error: azErr } = await supabase
         .from("azubi_profiles")
         .select(
@@ -102,10 +97,7 @@ export default function CompanyAzubisScreen() {
 
       setAzubis(az ?? []);
     } catch (e: any) {
-      Alert.alert(
-        "Fehler",
-        e?.message ?? "Konnte Azubis nicht laden."
-      );
+      Alert.alert("Fehler", e?.message ?? "Konnte Azubis nicht laden.");
     }
   }, [router]);
 
@@ -145,70 +137,11 @@ export default function CompanyAzubisScreen() {
     );
   }
 
-  if (!verified) {
-    return (
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        <Text style={{ fontSize: 18, fontWeight: "700" }}>
-          Azubis
-        </Text>
-
-        <View
-          style={{
-            padding: 14,
-            borderWidth: 1,
-            borderRadius: 12,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: "600",
-            }}
-          >
-            Noch nicht verifiziert
-          </Text>
-
-          <Text
-            style={{
-              marginTop: 8,
-              color: "#666",
-            }}
-          >
-            Sobald dein Betrieb verifiziert ist,
-            siehst du hier passende Azubis.
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          onPress={onRefresh}
-          style={{
-            padding: 14,
-            borderWidth: 1,
-            borderRadius: 10,
-            alignItems: "center",
-            opacity: refreshing ? 0.6 : 1,
-          }}
-          disabled={refreshing}
-        >
-          <Text>
-            {refreshing
-              ? "Aktualisiere…"
-              : "Aktualisieren"}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    );
-  }
-
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      <Text style={{ fontSize: 18, fontWeight: "700" }}>
-        Azubis
-      </Text>
+      <Text style={{ fontSize: 18, fontWeight: "700" }}>Azubis</Text>
 
-      <Text style={{ color: "#666" }}>
-        {count} Treffer
-      </Text>
+      <Text style={{ color: "#666" }}>{count} Treffer</Text>
 
       <TouchableOpacity
         onPress={onRefresh}
@@ -221,11 +154,7 @@ export default function CompanyAzubisScreen() {
         }}
         disabled={refreshing}
       >
-        <Text>
-          {refreshing
-            ? "Aktualisiere…"
-            : "Aktualisieren"}
-        </Text>
+        <Text>{refreshing ? "Aktualisiere…" : "Aktualisieren"}</Text>
       </TouchableOpacity>
 
       {azubis.length === 0 ? (
@@ -236,23 +165,13 @@ export default function CompanyAzubisScreen() {
             borderRadius: 12,
           }}
         >
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: "600",
-            }}
-          >
+          <Text style={{ fontSize: 16, fontWeight: "600" }}>
             Keine passenden Azubis gefunden
           </Text>
 
-          <Text
-            style={{
-              marginTop: 8,
-              color: "#666",
-            }}
-          >
-            Tipp: Prüfe, ob du Berufe ausgewählt hast
-            und ob es passende Azubi-Profile gibt.
+          <Text style={{ marginTop: 8, color: "#666" }}>
+            Tipp: Prüfe, ob du Berufe ausgewählt hast und ob es passende
+            Azubi-Profile gibt.
           </Text>
         </View>
       ) : (
@@ -272,7 +191,6 @@ export default function CompanyAzubisScreen() {
             const city = a.city ?? "";
             const plz = a.plz ?? "";
             const whatsapp = a.whatsapp_link ?? "";
-
             const tradeId = a.trade_id;
 
             return (
@@ -285,12 +203,7 @@ export default function CompanyAzubisScreen() {
                   gap: 6,
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "700",
-                  }}
-                >
+                <Text style={{ fontSize: 16, fontWeight: "700" }}>
                   {displayName}
                 </Text>
 
@@ -305,15 +218,11 @@ export default function CompanyAzubisScreen() {
 
                 <View style={{ height: 8 }} />
 
-                <Text style={{ fontWeight: "600" }}>
-                  Kontakt
-                </Text>
+                <Text style={{ fontWeight: "600" }}>Kontakt</Text>
 
                 <TouchableOpacity
                   disabled={!email}
-                  onPress={() =>
-                    Linking.openURL(`mailto:${email}`)
-                  }
+                  onPress={() => Linking.openURL(`mailto:${email}`)}
                 >
                   <Text style={{ color: email ? "#2563eb" : "#111" }}>
                     Email: {email || "—"}
@@ -332,9 +241,7 @@ export default function CompanyAzubisScreen() {
 
                     const phone = raw.replace(/[^\d+]/g, "");
 
-                    Linking.openURL(
-                      `https://wa.me/${phone.replace("+", "")}`
-                    );
+                    Linking.openURL(`https://wa.me/${phone.replace("+", "")}`);
                   }}
                 >
                   <Text style={{ color: whatsapp ? "#2563eb" : "#111" }}>
