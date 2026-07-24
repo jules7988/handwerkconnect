@@ -1,53 +1,55 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
-  name: "HandwerkConnect",
-  slug: "handwerkconnect",
-  scheme: "handwerkconnect",
-  version: "0.1.2",
-  orientation: "portrait",
-  icon: "./assets/icon.png",
-  userInterfaceStyle: "light",
+  name: 'AzuConnect',
+
+  // Technische IDs bleiben für die bestehende App unverändert.
+  slug: 'handwerkconnect',
+  scheme: 'handwerkconnect',
+
+  version: '0.1.3',
+  orientation: 'portrait',
+  icon: './assets/icon.png',
+  userInterfaceStyle: 'light',
 
   splash: {
-    image: "./assets/splash.png",
-    resizeMode: "contain",
-    backgroundColor: "#ffffff"
+    image: './assets/splash.png',
+    resizeMode: 'contain',
+    backgroundColor: '#ffffff',
   },
 
   ios: {
     supportsTablet: false,
-    bundleIdentifier: "com.jules88.handwerkconnect",
-
-    // TestFlight Build 34
-    buildNumber: "34",
+    bundleIdentifier: 'com.jules88.handwerkconnect',
 
     infoPlist: {
-      ITSAppUsesNonExemptEncryption: false
-    }
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
 
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#ffffff"
+      foregroundImage: './assets/adaptive-icon.png',
+      backgroundColor: '#ffffff',
     },
-    package: "com.jules88.handwerkconnect"
+
+    // Für die bestehende Android-App technisch unverändert lassen.
+    package: 'com.jules88.handwerkconnect',
   },
 
   web: {
-    bundler: "metro"
+    bundler: 'metro',
   },
 
-  plugins: ["expo-router"],
+  plugins: ['expo-router'],
 
   experiments: {
-    typedRoutes: true
+    typedRoutes: true,
   },
 
   extra: {
     eas: {
-      projectId: "23e8627d-112f-4fee-91cc-7838857bafaa"
+      projectId: '23e8627d-112f-4fee-91cc-7838857bafaa',
     },
 
     SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
@@ -55,11 +57,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 
     EDGE_BASE_URL:
       process.env.EXPO_PUBLIC_EDGE_BASE_URL ||
-      "http://localhost:54321/functions/v1",
+      'http://localhost:54321/functions/v1',
 
     MOCK_MODE:
-      process.env.NODE_ENV === "development"
-        ? (process.env.EXPO_PUBLIC_MOCK_MODE ?? "true")
-        : "false"
-  }
+      process.env.NODE_ENV === 'development'
+        ? (process.env.EXPO_PUBLIC_MOCK_MODE ?? 'true')
+        : 'false',
+  },
 });

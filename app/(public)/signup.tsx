@@ -1,15 +1,78 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Alert,
+  Pressable,
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+
 import Button from '@/components/Button';
 import BackToWelcomeButton from '@/components/BackToWelcomeButton';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { PRIVACY_VERSION } from '@/lib/legal';
+
+type SignupRole = 'azubi' | 'betrieb';
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function getSignupErrorMessage(error: unknown): string {
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : String(error);
+
+  if (
+    message.includes('invalid email') ||
+    message.includes('invalid format') ||
+    message.includes('unable to validate email')
+  ) {
+    return 'Bitte gib eine gültige E-Mail-Adresse ein.';
+  }
+
+  if (
+    message.includes('password should be at least') ||
+    message.includes('password must be at least')
+  ) {
+    return 'Das Passwort muss mindestens 6 Zeichen lang sein.';
+  }
+
+  if (
+    message.includes('user already registered') ||
+    message.includes('already been registered') ||
+    message.includes('already exists')
+  ) {
+    return 'Für diese E-Mail-Adresse existiert bereits ein Konto.';
+  }
+
+  if (
+    message.includes('email rate limit') ||
+    message.includes('rate limit')
+  ) {
+    return 'Es wurden zu viele Anfragen gesendet. Bitte versuche es später erneut.';
+  }
+
+  if (
+    message.includes('network request failed') ||
+    message.includes('failed to fetch') ||
+    message.includes('network')
+  ) {
+    return 'Die Verbindung zum Server ist fehlgeschlagen. Bitte prüfe deine Internetverbindung.';
+  }
+
+  return 'Die Registrierung ist fehlgeschlagen. Bitte versuche es erneut.';
+}
 
 export default function Signup() {
   const router = useRouter();
   const params = useLocalSearchParams<{ role?: string }>();
-  const role = params.role === 'azubi' ? 'azubi' : 'betrieb';
+
+  const role: SignupRole | null =
+    params.role === 'azubi' || params.role === 'betrieb'
+      ? params.role
+      : null;
 
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
@@ -17,10 +80,26 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
 
   const onSignup = async () => {
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (!role) {
+      Alert.alert(
+        'Rolle fehlt',
+        'Bitte gehe zurück und wähle aus, ob du einen Ausbildungsplatz oder Azubis suchst.'
+      );
+      return;
+    }
 
     if (!trimmedEmail) {
       Alert.alert('E-Mail fehlt', 'Bitte gib deine E-Mail-Adresse ein.');
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      Alert.alert(
+        'Ungültige E-Mail-Adresse',
+        'Bitte gib eine gültige E-Mail-Adresse ein.'
+      );
       return;
     }
 
@@ -29,10 +108,18 @@ export default function Signup() {
       return;
     }
 
+    if (pw.length < 6) {
+      Alert.alert(
+        'Passwort zu kurz',
+        'Das Passwort muss mindestens 6 Zeichen lang sein.'
+      );
+      return;
+    }
+
     if (!privacyAccepted) {
       Alert.alert(
         'Datenschutzerklärung',
-        'Bitte stimmen Sie zuerst der Datenschutzerklärung zu.'
+        'Bitte stimme zuerst der Datenschutzerklärung zu.'
       );
       return;
     }
@@ -40,28 +127,40 @@ export default function Signup() {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase.auth.signUp({
+      const privacyAcceptedAt = new Date().toISOString();
+
+      const { error } = await supabase.auth.signUp({
         email: trimmedEmail,
         password: pw,
+        options: {
+          emailRedirectTo: 'handwerkconnect://login',
+          data: {
+            role,
+            privacy_accepted_at: privacyAcceptedAt,
+            privacy_version: PRIVACY_VERSION,
+          },
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      const userId = data.user?.id;
-      if (!userId) throw new Error('Kein User zurückbekommen (signUp)');
-
-      const { error: upsertErr } = await supabase.from('profiles').upsert({
-        user_id: userId,
-        role,
-        privacy_accepted_at: new Date().toISOString(),
-        privacy_version: PRIVACY_VERSION,
-      });
-
-      if (upsertErr) throw upsertErr;
-
-      router.replace('/');
-    } catch (e: any) {
-      Alert.alert('Signup fehlgeschlagen', e.message ?? String(e));
+      Alert.alert(
+        'Konto erstellt',
+        'Wir haben dir eine Bestätigungsmail gesendet. Bitte bestätige zuerst deine E-Mail-Adresse und logge dich anschließend ein.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(public)/login'),
+          },
+        ]
+      );
+    } catch (error: unknown) {
+      Alert.alert(
+        'Registrierung fehlgeschlagen',
+        getSignupErrorMessage(error)
+      );
     } finally {
       setLoading(false);
     }
@@ -70,8 +169,14 @@ export default function Signup() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Konto erstellen</Text>
+
       <Text style={styles.subtitle}>
-        Rolle: {role === 'azubi' ? 'Azubi' : 'Betrieb'}
+        Rolle:{' '}
+        {role === 'azubi'
+          ? 'Azubi'
+          : role === 'betrieb'
+            ? 'Betrieb'
+            : 'Nicht ausgewählt'}
       </Text>
 
       <TextInput
@@ -79,6 +184,8 @@ export default function Signup() {
         onChangeText={setEmail}
         autoCapitalize="none"
         autoCorrect={false}
+        autoComplete="email"
+        textContentType="emailAddress"
         placeholder="E-Mail"
         keyboardType="email-address"
         style={styles.input}
@@ -88,6 +195,10 @@ export default function Signup() {
       <TextInput
         value={pw}
         onChangeText={setPw}
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="new-password"
+        textContentType="newPassword"
         placeholder="Passwort"
         secureTextEntry
         style={styles.input}
@@ -95,17 +206,21 @@ export default function Signup() {
       />
 
       <Pressable
-        onPress={() => setPrivacyAccepted((value) => !value)}
+        onPress={() => setPrivacyAccepted((currentValue) => !currentValue)}
         style={styles.checkboxRow}
         disabled={loading}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: privacyAccepted }}
       >
-        <Text style={styles.checkbox}>{privacyAccepted ? '☑︎' : '☐'}</Text>
+        <Text style={styles.checkbox}>
+          {privacyAccepted ? '☑︎' : '☐'}
+        </Text>
 
         <Text style={styles.checkboxText}>
           Ich habe die{' '}
           <Text
             style={styles.privacyLink}
-            onPress={() => router.push('/legal/datenschutz' as any)}
+            onPress={() => router.push('/legal/datenschutz' as never)}
           >
             Datenschutzerklärung
           </Text>{' '}
@@ -113,7 +228,7 @@ export default function Signup() {
         </Text>
       </Pressable>
 
-      <View style={{ height: 12 }} />
+      <View style={styles.smallSpacer} />
 
       <Button
         title="Konto erstellen"
@@ -121,7 +236,7 @@ export default function Signup() {
         loading={loading}
       />
 
-      <View style={{ height: 16 }} />
+      <View style={styles.mediumSpacer} />
 
       <BackToWelcomeButton />
     </View>
@@ -168,5 +283,11 @@ const styles = StyleSheet.create({
   privacyLink: {
     color: '#2563eb',
     fontWeight: '700',
+  },
+  smallSpacer: {
+    height: 12,
+  },
+  mediumSpacer: {
+    height: 16,
   },
 });
