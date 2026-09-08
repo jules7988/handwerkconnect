@@ -27,11 +27,11 @@ export default function Index() {
         return;
       }
 
-      setTarget(
-        prof.role === 'azubi'
-          ? '/azubi/profile'
-          : '/company/profile'
-      );
+setTarget(
+  prof.role === 'azubi'
+    ? '/azubi/profile'
+    : '/company'
+);
     };
 
     run();

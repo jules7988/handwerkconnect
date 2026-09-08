@@ -19,14 +19,14 @@ export default function Welcome() {
 
       <View style={styles.actions}>
         <Button
-          title="Ich suche einen Ausbildungsplatz"
+          title="Neu als Azubi registrieren"
           onPress={() => router.push('/(public)/signup?role=azubi')}
         />
 
         <View style={styles.smallSpacer} />
 
         <Button
-          title="Ich suche Azubis"
+          title="Neu als Betrieb registrieren"
           onPress={() => router.push('/(public)/signup?role=betrieb')}
         />
 

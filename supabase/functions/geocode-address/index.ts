@@ -49,7 +49,7 @@ serve(async (req: Request) => {
 
     const response = await fetch(nominatimUrl, {
       headers: {
-        "User-Agent": "HandwerkConnect-MVP/0.1.2",
+        "User-Agent": "AzuConnect-MVP/0.1.2",
         "Accept": "application/json",
       },
       signal: controller.signal,

@@ -1,4 +1,4 @@
-export const PRIVACY_VERSION = 'v2';
+export const PRIVACY_VERSION = 'v3';
 
 export const IMPRESSUM_CONTENT = [
   {
@@ -161,14 +161,14 @@ export const PRIVACY_CONTENT = [
       'Nutzer sind verpflichtet, zutreffende Angaben zu machen. Sofern nach den jeweils anwendbaren gesetzlichen Vorschriften eine Zustimmung der Erziehungsberechtigten erforderlich ist, liegt die Einholung dieser Zustimmung in der Verantwortung des Nutzers beziehungsweise seiner Erziehungsberechtigten.',
     ],
   },
-  {
-    title: '16. Löschung von Benutzerkonten',
-    paragraphs: [
-      'Die Löschung eines Benutzerkontos kann per E-Mail an contact@azuconnect.com beantragt werden.',
-      'Bei der Löschung werden das Benutzerkonto sowie die damit verbundenen Profildaten, Kontaktdaten, Adressdaten und Geokoordinaten aus der produktiven Datenbank entfernt.',
-      'Daten können bis zum Ablauf der jeweiligen Backup-Aufbewahrungsfristen weiterhin in technischen Sicherungen enthalten sein.',
-    ],
-  },
+{
+  title: '16. Löschung von Benutzerkonten',
+  paragraphs: [
+    'Nutzer können ihr Benutzerkonto jederzeit direkt in der App dauerhaft löschen. Die Löschfunktion ist im jeweiligen Benutzerbereich unter „Account löschen“ verfügbar. Alternativ kann die Löschung per E-Mail an contact@azuconnect.com beantragt werden.',
+    'Bei der Löschung werden das Benutzerkonto sowie die damit verbundenen Profildaten, Kontaktdaten, Adressdaten und Geokoordinaten aus der produktiven Datenbank dauerhaft entfernt. Die Löschung kann nicht rückgängig gemacht werden.',
+    'Daten können bis zum Ablauf der jeweiligen Backup-Aufbewahrungsfristen weiterhin in technischen Sicherungen enthalten sein.',
+  ],
+},
   {
     title: '17. Speicherdauer',
     paragraphs: [

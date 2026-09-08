@@ -132,7 +132,7 @@ export default function Login() {
       }
 
       if (profile.role === 'betrieb') {
-        router.replace('/company/profile');
+        router.replace('/company');
         return;
       }
 

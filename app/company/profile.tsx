@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import {
   Alert,
   KeyboardAvoidingView,
@@ -9,14 +10,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { useRouter } from "expo-router";
+
 import { supabase } from "@/lib/supabase";
+import { deleteAccount } from "@/lib/deleteAccount";
 
 export default function CompanyProfileScreen() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [hasTrades, setHasTrades] = useState(false);
 
   const [name, setName] = useState("");
@@ -24,7 +29,6 @@ export default function CompanyProfileScreen() {
   const [phone, setPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [website, setWebsite] = useState("");
-
   const [trainingStreet, setTrainingStreet] = useState("");
   const [trainingHouseNumber, setTrainingHouseNumber] = useState("");
   const [trainingPostalCode, setTrainingPostalCode] = useState("");
@@ -36,6 +40,7 @@ export default function CompanyProfileScreen() {
     (async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
+
         const userId = auth.user?.id;
 
         if (!userId) {
@@ -67,17 +72,23 @@ export default function CompanyProfileScreen() {
             setPhone(data.phone ?? "");
             setContactEmail(data.contact_email ?? "");
             setWebsite(data.website ?? "");
-
             setTrainingStreet(data.training_street ?? "");
             setTrainingHouseNumber(data.training_house_number ?? "");
-            setTrainingPostalCode(data.training_postal_code ?? data.plz ?? "");
+            setTrainingPostalCode(
+              data.training_postal_code ?? data.plz ?? ""
+            );
             setTrainingCity(data.training_city ?? data.city ?? "");
           }
         }
       } catch (e: any) {
-        Alert.alert("Fehler", e?.message ?? "Konnte Profil nicht laden.");
+        Alert.alert(
+          "Fehler",
+          e?.message ?? "Konnte Profil nicht laden."
+        );
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     })();
 
@@ -87,21 +98,29 @@ export default function CompanyProfileScreen() {
   }, [router]);
 
   async function geocodeTrainingAddress() {
-    const { data, error } = await supabase.functions.invoke("geocode-address", {
-      body: {
-        street: trainingStreet.trim(),
-        houseNumber: trainingHouseNumber.trim(),
-        postalCode: trainingPostalCode.trim(),
-        city: trainingCity.trim(),
-      },
-    });
+    const { data, error } = await supabase.functions.invoke(
+      "geocode-address",
+      {
+        body: {
+          street: trainingStreet.trim(),
+          houseNumber: trainingHouseNumber.trim(),
+          postalCode: trainingPostalCode.trim(),
+          city: trainingCity.trim(),
+        },
+      }
+    );
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      throw new Error(error.message);
+    }
 
     const latitude = Number(data?.latitude);
     const longitude = Number(data?.longitude);
 
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
       throw new Error("INVALID_COORDINATES");
     }
 
@@ -109,21 +128,63 @@ export default function CompanyProfileScreen() {
   }
 
   async function onSave() {
-    if (!name.trim()) return Alert.alert("Fehlt", "Bitte Firmenname eintragen.");
-    if (!contactName.trim()) return Alert.alert("Fehlt", "Bitte Ansprechpartner eintragen.");
-    if (!trainingStreet.trim()) return Alert.alert("Fehlt", "Bitte Straße des Ausbildungsstandorts eintragen.");
-    if (!trainingHouseNumber.trim()) return Alert.alert("Fehlt", "Bitte Hausnummer des Ausbildungsstandorts eintragen.");
-    if (!trainingPostalCode.trim()) return Alert.alert("Fehlt", "Bitte PLZ des Ausbildungsstandorts eintragen.");
-    if (!trainingCity.trim()) return Alert.alert("Fehlt", "Bitte Stadt des Ausbildungsstandorts eintragen.");
+    if (deleting) return;
+
+    if (!name.trim()) {
+      return Alert.alert(
+        "Fehlt",
+        "Bitte Firmenname eintragen."
+      );
+    }
+
+    if (!contactName.trim()) {
+      return Alert.alert(
+        "Fehlt",
+        "Bitte Ansprechpartner eintragen."
+      );
+    }
+
+    if (!trainingStreet.trim()) {
+      return Alert.alert(
+        "Fehlt",
+        "Bitte Straße des Ausbildungsstandorts eintragen."
+      );
+    }
+
+    if (!trainingHouseNumber.trim()) {
+      return Alert.alert(
+        "Fehlt",
+        "Bitte Hausnummer des Ausbildungsstandorts eintragen."
+      );
+    }
+
+    if (!trainingPostalCode.trim()) {
+      return Alert.alert(
+        "Fehlt",
+        "Bitte PLZ des Ausbildungsstandorts eintragen."
+      );
+    }
+
+    if (!trainingCity.trim()) {
+      return Alert.alert(
+        "Fehlt",
+        "Bitte Stadt des Ausbildungsstandorts eintragen."
+      );
+    }
 
     setSaving(true);
 
     try {
       const { data: auth } = await supabase.auth.getUser();
+
       const userId = auth.user?.id;
-      if (!userId) throw new Error("Nicht eingeloggt.");
+
+      if (!userId) {
+        throw new Error("Nicht eingeloggt.");
+      }
 
       const coordinates = await geocodeTrainingAddress();
+
       const now = new Date().toISOString();
 
       const { error } = await supabase.from("companies").upsert(
@@ -147,7 +208,9 @@ export default function CompanyProfileScreen() {
         { onConflict: "user_id" }
       );
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       if (hasTrades) {
         router.replace("/company");
@@ -170,16 +233,71 @@ export default function CompanyProfileScreen() {
           "Ausbildungsstandort konnte nicht eindeutig gefunden werden. Bitte überprüfe Straße, Hausnummer, PLZ und Stadt."
         );
       } else {
-        Alert.alert("Fehler", e?.message ?? "Speichern fehlgeschlagen.");
+        Alert.alert(
+          "Fehler",
+          e?.message ?? "Speichern fehlgeschlagen."
+        );
       }
     } finally {
       setSaving(false);
     }
   }
 
+  async function performDeleteAccount() {
+    if (deleting) return;
+
+    setDeleting(true);
+
+    const result = await deleteAccount();
+
+    if (!result.success) {
+      setDeleting(false);
+
+      Alert.alert(
+        "Fehler",
+        "Dein Account konnte gerade nicht gelöscht werden. Bitte versuche es erneut."
+      );
+
+      return;
+    }
+
+    router.replace("/(public)/welcome");
+
+    Alert.alert(
+      "Account gelöscht",
+      "Dein Account wurde dauerhaft gelöscht."
+    );
+  }
+
+  function onDeleteAccount() {
+    if (deleting) return;
+
+    Alert.alert(
+      "Account dauerhaft löschen?",
+      "Dein Account und alle damit verbundenen Profildaten werden dauerhaft gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.",
+      [
+        {
+          text: "Abbrechen",
+          style: "cancel",
+        },
+        {
+          text: "Account endgültig löschen",
+          style: "destructive",
+          onPress: performDeleteAccount,
+        },
+      ]
+    );
+  }
+
   if (loading) {
     return (
-      <View style={{ flex: 1, padding: 16, justifyContent: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          padding: 16,
+          justifyContent: "center",
+        }}
+      >
         <Text>Lade…</Text>
       </View>
     );
@@ -206,12 +324,18 @@ export default function CompanyProfileScreen() {
           Betriebsprofil
         </Text>
 
-        <Field label="Firmenname *" value={name} onChangeText={setName} />
+        <Field
+          label="Firmenname *"
+          value={name}
+          onChangeText={setName}
+          editable={!deleting}
+        />
 
         <Field
           label="Ansprechpartner *"
           value={contactName}
           onChangeText={setContactName}
+          editable={!deleting}
         />
 
         <Field
@@ -219,6 +343,7 @@ export default function CompanyProfileScreen() {
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
+          editable={!deleting}
         />
 
         <Field
@@ -227,6 +352,7 @@ export default function CompanyProfileScreen() {
           onChangeText={setContactEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          editable={!deleting}
         />
 
         <Field
@@ -234,9 +360,16 @@ export default function CompanyProfileScreen() {
           value={website}
           onChangeText={setWebsite}
           autoCapitalize="none"
+          editable={!deleting}
         />
 
-        <Text style={{ fontSize: 16, fontWeight: "600", marginTop: 8 }}>
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: "600",
+            marginTop: 8,
+          }}
+        >
           Ausbildungsstandort
         </Text>
 
@@ -244,12 +377,14 @@ export default function CompanyProfileScreen() {
           label="Straße *"
           value={trainingStreet}
           onChangeText={setTrainingStreet}
+          editable={!deleting}
         />
 
         <Field
           label="Hausnummer *"
           value={trainingHouseNumber}
           onChangeText={setTrainingHouseNumber}
+          editable={!deleting}
         />
 
         <Field
@@ -257,27 +392,55 @@ export default function CompanyProfileScreen() {
           value={trainingPostalCode}
           onChangeText={setTrainingPostalCode}
           keyboardType="number-pad"
+          editable={!deleting}
         />
 
         <Field
           label="Stadt *"
           value={trainingCity}
           onChangeText={setTrainingCity}
+          editable={!deleting}
         />
 
         <TouchableOpacity
           onPress={onSave}
-          disabled={saving}
+          disabled={saving || deleting}
           style={{
             padding: 14,
             borderRadius: 10,
             alignItems: "center",
             borderWidth: 1,
-            opacity: saving ? 0.6 : 1,
+            opacity: saving || deleting ? 0.6 : 1,
           }}
         >
           <Text style={{ fontWeight: "600" }}>
             {saving ? "Speichere…" : buttonLabel}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onDeleteAccount}
+          disabled={deleting}
+          accessibilityRole="button"
+          accessibilityLabel="Account dauerhaft löschen"
+          style={{
+            padding: 14,
+            borderRadius: 10,
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: "#dc2626",
+            opacity: deleting ? 0.6 : 1,
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: "700",
+              color: "#dc2626",
+            }}
+          >
+            {deleting
+              ? "Account wird gelöscht …"
+              : "Account löschen"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -291,21 +454,26 @@ function Field(props: {
   onChangeText: (t: string) => void;
   keyboardType?: any;
   autoCapitalize?: any;
+  editable?: boolean;
 }) {
   return (
     <View style={{ gap: 6 }}>
-      <Text style={{ color: "#444" }}>{props.label}</Text>
+      <Text style={{ color: "#444" }}>
+        {props.label}
+      </Text>
 
       <TextInput
         value={props.value}
         onChangeText={props.onChangeText}
         keyboardType={props.keyboardType}
         autoCapitalize={props.autoCapitalize ?? "sentences"}
+        editable={props.editable}
         style={{
           borderWidth: 1,
           borderColor: "#999",
           borderRadius: 8,
           padding: 12,
+          opacity: props.editable === false ? 0.6 : 1,
         }}
       />
     </View>
